@@ -1,0 +1,64 @@
+version: "3.9"
+
+services:
+  # PostgreSQL Database
+  db:
+    image: postgres:16-alpine
+    container_name: financeiq-db
+    environment:
+      POSTGRES_USER: financeiq
+      POSTGRES_PASSWORD: financeiq
+      POSTGRES_DB: financeiq
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U financeiq"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # FastAPI Backend
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: financeiq-backend
+    environment:
+      - DATABASE_URL=postgresql+asyncpg://financeiq:financeiq@db:5432/financeiq
+      - DATABASE_URL_SYNC=postgresql+psycopg2://financeiq:financeiq@db:5432/financeiq
+      - CORS_ORIGINS=http://localhost:3000
+      - UPLOAD_DIR=/app/uploads
+      - GEMINI_API_KEY=${GEMINI_API_KEY}
+      - DEBUG=true
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./backend/app:/app/app
+      - upload_data:/app/uploads
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: unless-stopped
+
+  # Next.js Frontend
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: financeiq-frontend
+    environment:
+      - NEXT_PUBLIC_API_URL=http://localhost:8000
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./frontend/src:/app/src
+    depends_on:
+      - backend
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+  upload_data:
+

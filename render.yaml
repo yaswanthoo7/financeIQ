@@ -1,0 +1,41 @@
+services:
+  # Web Service: FastAPI Backend
+  - type: web
+    name: invoiceiq-backend
+    runtime: docker
+    dockerfilePath: ./backend/Dockerfile
+    dockerContext: ./backend
+    envVars:
+      - key: PORT
+        value: 8000
+      - key: DATABASE_URL
+        fromDatabase:
+          name: invoiceiq-db
+          property: connectionString
+      - key: DATABASE_URL_SYNC
+        fromDatabase:
+          name: invoiceiq-db
+          property: connectionString
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: CORS_ORIGINS
+        value: https://invoiceiq-frontend.onrender.com,http://localhost:3000
+
+  # Web Service: Next.js Frontend
+  - type: web
+    name: invoiceiq-frontend
+    runtime: node
+    buildCommand: cd frontend && npm install && npm run build
+    startCommand: cd frontend && npm run start
+    envVars:
+      - key: NEXT_PUBLIC_API_URL
+        fromService:
+          type: web
+          name: invoiceiq-backend
+          property: url
+
+databases:
+  # Managed PostgreSQL Database
+  - name: invoiceiq-db
+    databaseName: invoiceiq
+    user: invoiceiq
