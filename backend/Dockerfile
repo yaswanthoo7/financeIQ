@@ -2,12 +2,7 @@ FROM python:3.12-slim
 
 WORKDIR /app
 
-# Install system dependencies for unstructured.io and pdf processing
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    poppler-utils \
-    tesseract-ocr \
-    libmagic1 \
-    && rm -rf /var/lib/apt/lists/*
+# No system dependencies needed for unstructured.io anymore
 
 # Install Python dependencies
 COPY requirements.txt .

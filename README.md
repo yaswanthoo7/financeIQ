@@ -9,7 +9,9 @@ FinanceIQ is a full-stack web application that extracts structured data from var
 - **Multi-Document Support** — Handles Invoices, Receipts, Purchase Orders, and Expense Reports
 - **Automatic Categorization** — Auto-assigns categories with a dual-persona (Business vs Personal) design
 - **Smart Upload** — Drag-and-drop upload with real-time processing status
-- **Dual Extraction Pipeline** — LLM vision (Gemini 2.0 Flash) with unstructured.io hybrid fallback
+- **Extraction Pipeline** — LLM vision (Gemini 2.0 Flash)
+- **Financial Auditor Pipeline** — Deterministic cross-checks for LLM math and logical constraints
+- **Anomaly Resolution UI** — Cell-level precision in flagging AI mistakes
 - **Adaptive Review UI** — View original document alongside dynamically generated forms based on document type
 - **Natural Language Search** — Query records in plain English ("show me all healthcare expenses from last month")
 - **Dashboard Analytics** — Total spend, category breakdowns, record type breakdowns, monthly trends
@@ -22,7 +24,7 @@ FinanceIQ is a full-stack web application that extracts structured data from var
 | Frontend | Next.js 14, React, TypeScript, Tailwind CSS, shadcn/ui |
 | Backend | Python 3.12, FastAPI, SQLAlchemy (Async) |
 | LLM | Google Gemini 2.0 Flash |
-| Document Processing | unstructured.io |
+| Document Processing | Gemini 2.0 Flash Vision |
 | Database | PostgreSQL 16 |
 | Deployment | Render (Docker) |
 
@@ -128,11 +130,13 @@ unstrut-invoice/
 │   Dashboard)                 │
 ├──────────────────────────────┤
 │      FastAPI Backend         │
-│  (REST API, Processing)      │
-├──────────┬───────────────────┤
-│ Gemini   │  unstructured.io  │
-│ 2.0 Flash│  (PDF/OCR parse)  │
-├──────────┴───────────────────┤
+│ ┌──────────────────────────┐ │
+│ │ Extraction & Routing     │ │
+│ ├──────────┬───────────────┤ │
+│ │ LLM      │ Auditor       │ │
+│ │ (Gemini) │ Service       │ │
+│ └──────────┴───────────────┘ │
+├──────────────────────────────┤
 │     PostgreSQL Database      │
 └──────────────────────────────┘
 ```

@@ -3,7 +3,7 @@
  * Handles all communication with the FastAPI backend.
  */
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+const API_BASE = process.env.NEXT_PUBLIC_API_URL !== undefined ? process.env.NEXT_PUBLIC_API_URL : "";
 
 // ──── Types ────
 
@@ -231,7 +231,13 @@ async function apiFetch<T>(
 
   if (!res.ok) {
     const errorData = await res.json().catch(() => ({ detail: res.statusText }));
-    throw new Error(errorData.detail || `API error: ${res.status}`);
+    let errorMsg = errorData.detail || `API error: ${res.status}`;
+    if (Array.isArray(errorMsg)) {
+      errorMsg = errorMsg.map(e => `${e.loc?.join('.')} ${e.msg}`).join(', ');
+    } else if (typeof errorMsg === 'object') {
+      errorMsg = JSON.stringify(errorMsg);
+    }
+    throw new Error(errorMsg);
   }
 
   return res.json();

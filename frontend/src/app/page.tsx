@@ -221,7 +221,10 @@ export default function DashboardPage() {
                     <ResponsiveContainer width="100%" height="100%">
                       <PieChart>
                         <Pie
-                          data={analytics.spend_by_category.slice(0, 8)}
+                          data={analytics.spend_by_category.slice(0, 8).map(item => ({
+                            ...item,
+                            total_spend: Number(item.total_spend)
+                          }))}
                           dataKey="total_spend"
                           nameKey="category_name"
                           cx="50%"
@@ -264,7 +267,10 @@ export default function DashboardPage() {
                 <CardContent>
                   <div className="h-64">
                     <ResponsiveContainer width="100%" height="100%">
-                      <LineChart data={analytics.monthly_trend}>
+                      <LineChart data={analytics.monthly_trend.map(item => ({
+                        ...item,
+                        total_spend: Number(item.total_spend)
+                      }))}>
                         <CartesianGrid strokeDasharray="3 3" stroke="#27272a" />
                         <XAxis dataKey="month" stroke="#71717a" fontSize={12} />
                         <YAxis stroke="#71717a" fontSize={12} />
@@ -301,7 +307,10 @@ export default function DashboardPage() {
                 <CardContent>
                   <div className="h-64">
                     <ResponsiveContainer width="100%" height="100%">
-                      <BarChart data={analytics.top_vendors.slice(0, 5)} layout="vertical">
+                      <BarChart data={analytics.top_vendors.slice(0, 5).map(item => ({
+                        ...item,
+                        total_spend: Number(item.total_spend)
+                      }))} layout="vertical">
                         <CartesianGrid strokeDasharray="3 3" stroke="#27272a" />
                         <XAxis type="number" stroke="#71717a" fontSize={12} />
                         <YAxis

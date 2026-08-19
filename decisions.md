@@ -4,6 +4,14 @@ A running log of design decisions, tradeoffs, and reasoning made during the buil
 
 ---
 
+## The Hard Problem: Silent Hallucinations and Mathematical Integrity
+
+**The Problem:** Turning messy financial docs into structured data.
+**The Hard Part:** LLMs hallucinate numbers and fail at math. In finance, a silently hallucinated total corrupts downstream accounting. Generic "Please review this document" flags are terrible UX. The hard part is catching AI mistakes deterministically and designing a UX that helps humans resolve them instantly.
+**The Slice:** We implemented a deterministic `AuditorService` that cross-checks LLM extraction math (e.g. `subtotal + tax == total`) and temporal logic. This is paired with an "Anomaly Resolution" UI that flags exact cell-level conflicts, forcing strict grounding and mathematical integrity over the LLM output.
+
+---
+
 ## 1. Problem Scoping: Core Financial Documents, Not Generic Documents
 
 **Decision:** Support four core financial document types — **Invoices, Receipts, Purchase Orders, and Expense Reports** — rather than building a generic document parser or limiting to a single type.
@@ -41,18 +49,18 @@ We perform classification, extraction, and categorization in a **single Gemini A
 
 ---
 
-## 3. Dual Extraction Pipeline (LLM-Only + Hybrid)
+## 3. Extraction Pipeline (LLM-Only)
 
-**Decision:** Implement two extraction methods — LLM vision (Gemini 2.0 Flash) as primary, and unstructured.io + LLM as fallback — with automatic confidence-based switching.
+**Decision:** Rely entirely on LLM vision (Gemini 2.0 Flash) for extracting structured data from documents. If extraction confidence is low, we flag it for user review rather than attempting a secondary extraction method.
 
 **Alternatives considered:**
 - LLM-only (simpler, fewer dependencies)
 - Traditional OCR + rule-based parsing (no LLM cost, but brittle)
 - Cloud Document AI (AWS Textract / Google Document AI) — accurate but feels like "just calling an API"
 
-**Reasoning:** LLM vision is remarkably good at understanding document layouts but can struggle with very dense tables or low-quality scans. The hybrid approach (parse text first with unstructured.io, then structure with LLM) handles these cases better because the LLM gets cleaner text input. Having both with automatic fallback means the system handles more edge cases without user intervention. The confidence score comparison between methods ensures we always use the best result.
+**Reasoning:** LLM vision is remarkably good at understanding document layouts directly from the image/PDF. While we initially considered a hybrid approach (using OCR/unstructured.io as a fallback for dense tables or low-quality scans), the added complexity of maintaining system-level dependencies (like poppler and tesseract) outweighed the benefits. Gemini 2.0 Flash is sophisticated enough to handle edge cases in most documents. By relying solely on the LLM, we simplify our backend infrastructure significantly. When the LLM struggles, human review is the most reliable fallback.
 
-**Tradeoff accepted:** The hybrid path adds unstructured.io as a dependency, which requires system packages (poppler, tesseract) — making deployment slightly more complex. We mitigate this with Docker.
+**Tradeoff accepted:** Some very complex documents may require more manual correction if the LLM's confidence drops, since we no longer have an OCR fallback. We mitigate this by providing a highly ergonomic review UI for quick human correction.
 
 ---
 
@@ -167,7 +175,7 @@ This demonstrates product thinking (users need to verify), UX skill (the interac
 - Next.js full-stack (API routes + frontend in one)
 - React SPA + FastAPI
 
-**Reasoning:** Document processing in Python is vastly superior to Node.js — libraries like unstructured.io, Pillow, pdf2image, and the Google Gemini SDK are all Python-first. Next.js gives us SSR, excellent routing, and a mature React ecosystem. The two-service architecture adds Docker Compose complexity but gives each service the best tool for its job.
+**Reasoning:** Document processing in Python is vastly superior to Node.js — libraries like the Google Gemini SDK are Python-first. Next.js gives us SSR, excellent routing, and a mature React ecosystem. The two-service architecture adds Docker Compose complexity but gives each service the best tool for its job.
 
 ---
 
@@ -213,6 +221,21 @@ This demonstrates product thinking (users need to verify), UX skill (the interac
 - Classification, categorization, and multi-type extraction each have dedicated test coverage
 
 **Test structure:** Unit tests for data utilities (safe_decimal, safe_date, enum validation), API tests for endpoints (`/api/records`, `/api/categories`), extraction tests for each document type's save logic, and prompt formatting tests for the unified prompt.
+
+---
+
+## 14. Financial Auditor Pipeline and Anomaly Resolution
+
+**Decision:** Intercept LLM data extraction with a deterministic `AuditorService` that verifies math and temporal constraints before saving, highlighting cell-level anomalies in the UI rather than relying solely on the LLM's own self-assessed "confidence score".
+
+**Alternatives considered:**
+- Prompting the LLM to "double-check its math" (often fails)
+- Failing the extraction entirely if math doesn't align
+- Generic document-level warning flag ("Please review")
+
+**Reasoning:** LLMs hallucinate numbers and fail at math. In finance, a silently hallucinated total corrupts downstream accounting. A generic "Please review this document" flag places all the cognitive load on the user to find the error. By writing a deterministic parser that cross-checks the LLM's extraction (e.g., `subtotal + tax == total_amount`), we can pinpoint exactly which cells conflict. We downgrade the confidence of only the conflicting cells and present an "Anomaly Resolution" UI that highlights the exact fields in error, explaining *why* the math doesn't add up.
+
+**What this demonstrates:** This solves a genuinely hard, messy sub-problem of LLM wrappers: strict grounding and mathematical integrity. It shifts the UX from manual proofreading to targeted anomaly resolution.
 
 ---
 

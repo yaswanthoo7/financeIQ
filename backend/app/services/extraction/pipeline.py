@@ -19,7 +19,8 @@ from app.models.financial_record import (
 from app.models.enums import RecordType
 from app.config import get_settings
 from app.services.extraction.llm_extractor import extract_with_llm
-from app.services.extraction.hybrid_extractor import extract_with_hybrid
+from app.services.extraction.auditor import AuditorService
+import json
 
 logger = logging.getLogger(__name__)
 settings = get_settings()
@@ -75,42 +76,19 @@ async def _process_record_async(record_id: str):
             extracted_data = None
             extraction_error = None
             
-            # Step 1: Try LLM-only extraction
+            # Step 1: LLM-only extraction
             try:
                 extracted_data = await extract_with_llm(record.file_path)
                 confidence = extracted_data.get("confidence_score", 0)
                 
                 logger.info(f"LLM-only extraction confidence: {confidence}")
                 
-                # If confidence is below threshold, try hybrid
-                if confidence < settings.CONFIDENCE_THRESHOLD:
-                    logger.info(f"Low confidence ({confidence}), attempting hybrid extraction...")
-                    try:
-                        hybrid_data = await extract_with_hybrid(record.file_path)
-                        hybrid_confidence = hybrid_data.get("confidence_score", 0)
-                        
-                        # Use whichever has higher confidence
-                        if hybrid_confidence > confidence:
-                            extracted_data = hybrid_data
-                            logger.info(f"Using hybrid extraction (confidence: {hybrid_confidence})")
-                        else:
-                            logger.info(f"Keeping LLM-only extraction (confidence: {confidence} >= hybrid: {hybrid_confidence})")
-                    except Exception as e:
-                        logger.warning(f"Hybrid extraction failed, using LLM-only results: {e}")
-                        # Keep the LLM-only results
-                        
             except Exception as e:
                 logger.warning(f"LLM-only extraction failed: {e}")
-                
-                # Step 2: Fall back to hybrid extraction
-                try:
-                    extracted_data = await extract_with_hybrid(record.file_path)
-                    logger.info("Hybrid extraction succeeded as fallback")
-                except Exception as e2:
-                    extraction_error = f"Both extraction methods failed. LLM: {str(e)[:200]}. Hybrid: {str(e2)[:200]}"
-                    logger.error(extraction_error)
+                extraction_error = f"Extraction failed: {str(e)[:200]}"
+                logger.error(extraction_error)
             
-            # Step 3: Save results
+            # Step 2: Save results
             if extracted_data:
                 await _save_extraction_results(db, record, extracted_data)
             else:
@@ -130,19 +108,37 @@ async def _process_record_async(record_id: str):
 
 async def _match_or_create_category(db, session_id: str, category_name: str | None) -> UUID | None:
     """Match extracted category name to an existing category, or return None."""
-    if not category_name or category_name == "Uncategorized":
+    if not category_name or category_name.strip() == "Uncategorized":
         return None
     
-    # Try to find a matching category (system or user's session)
-    query = select(Category).where(
-        Category.name.ilike(category_name),
-        (Category.session_id == None) | (Category.session_id == session_id)
-    )
-    result = await db.execute(query)
-    category = result.scalar_one_or_none()
+    import re
     
-    if category:
-        return category.id
+    # Strip group suffix the LLM may append, e.g. "Healthcare (Personal)" → "Healthcare"
+    cleaned_name = re.sub(r'\s*\((?:Business|Personal|Custom)\)\s*$', '', category_name, flags=re.IGNORECASE).strip()
+    
+    # Try exact match first (case-insensitive)
+    session_filter = (Category.session_id == None) | (Category.session_id == session_id)
+    
+    for name_to_try in [cleaned_name, category_name]:
+        query = select(Category).where(
+            Category.name.ilike(name_to_try),
+            session_filter,
+        )
+        result = await db.execute(query)
+        category = result.scalar_one_or_none()
+        if category:
+            return category.id
+    
+    # Fallback: partial match — check if the LLM name contains a known category name
+    all_cats_result = await db.execute(
+        select(Category).where(session_filter)
+    )
+    all_cats = all_cats_result.scalars().all()
+    
+    for cat in all_cats:
+        if cat.name.lower() in cleaned_name.lower() or cleaned_name.lower() in cat.name.lower():
+            logger.info(f"Partial category match: '{category_name}' → '{cat.name}'")
+            return cat.id
     
     # No match found — return None (don't create unknown categories)
     logger.info(f"No matching category found for '{category_name}'")
@@ -190,6 +186,15 @@ async def _save_extraction_results(db, record: FinancialRecord, data: dict):
     else:
         record.status = "needs_review"
         record.error_message = "Low confidence extraction — please review all fields"
+
+    # Audit the data
+    if record_type == RecordType.INVOICE.value:
+        auditor = AuditorService()
+        invoice_detail = data.get("invoice_detail") or {}
+        anomalies = auditor.audit_invoice(invoice_detail)
+        if anomalies:
+            record.status = "needs_review"
+            record.anomalies = json.dumps([{"field": a.field, "message": a.message} for a in anomalies])
     
     # Create type-specific detail record
     if record_type == RecordType.INVOICE.value:

@@ -61,6 +61,7 @@ class FinancialRecord(Base):
     extraction_method = Column(String(20), nullable=True)  # 'llm_only' or 'hybrid'
     confidence_score = Column(Numeric(3, 2), nullable=True)
     raw_text = Column(Text, nullable=True)
+    anomalies = Column(Text, nullable=True)  # Stores JSON array of CellAnomaly dicts
 
     # File info
     original_filename = Column(String(255), nullable=False)

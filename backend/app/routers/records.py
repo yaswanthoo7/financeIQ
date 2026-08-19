@@ -228,7 +228,7 @@ async def update_record(
             line_item = LineItem(
                 financial_record_id=record_id,
                 sort_order=i,
-                **item_data.model_dump(exclude_unset=True),
+                **item_data.model_dump(exclude_unset=True, exclude={"sort_order"}),
             )
             db.add(line_item)
     

@@ -35,6 +35,7 @@ export default function RecordDetailPage() {
   // Form State
   const [formData, setFormData] = useState<any>({});
   const [lineItems, setLineItems] = useState<any[]>([]);
+  const [anomalies, setAnomalies] = useState<any[]>([]);
 
   const loadData = useCallback(async () => {
     try {
@@ -46,6 +47,18 @@ export default function RecordDetailPage() {
       setRecord(recordData);
       setCategories(cats);
       
+      let parsedAnomalies = [];
+      try {
+        if (recordData.anomalies) {
+          parsedAnomalies = typeof recordData.anomalies === 'string' 
+            ? JSON.parse(recordData.anomalies) 
+            : recordData.anomalies;
+        }
+      } catch (e) {
+        console.error("Failed to parse anomalies", e);
+      }
+      setAnomalies(parsedAnomalies);
+
       // Initialize form data
       setFormData({
         record_type: recordData.record_type || "invoice",
@@ -106,28 +119,28 @@ export default function RecordDetailPage() {
       if (formData.record_type === "invoice") {
         payload.invoice_detail = {
           ...(record.invoice_detail || {}),
-          invoice_number: formData.invoice_number,
-          due_date: formData.due_date,
-          customer_name: formData.customer_name,
+          invoice_number: formData.invoice_number || null,
+          due_date: formData.due_date || null,
+          customer_name: formData.customer_name || null,
         } as any;
       } else if (formData.record_type === "receipt") {
         payload.receipt_detail = {
           ...(record.receipt_detail || {}),
-          merchant_name: formData.merchant_name,
-          payment_method: formData.payment_method,
+          merchant_name: formData.merchant_name || null,
+          payment_method: formData.payment_method || null,
         } as any;
       } else if (formData.record_type === "purchase_order") {
         payload.purchase_order_detail = {
           ...(record.purchase_order_detail || {}),
-          po_number: formData.po_number,
-          po_status: formData.po_status,
+          po_number: formData.po_number || null,
+          po_status: formData.po_status || null,
         } as any;
       } else if (formData.record_type === "expense_report") {
         payload.expense_report_detail = {
           ...(record.expense_report_detail || {}),
-          report_number: formData.report_number,
-          employee_name: formData.employee_name,
-          purpose: formData.purpose,
+          report_number: formData.report_number || null,
+          employee_name: formData.employee_name || null,
+          purpose: formData.purpose || null,
         } as any;
       }
 
@@ -137,6 +150,10 @@ export default function RecordDetailPage() {
       setError(err.message);
       setSaving(false);
     }
+  };
+
+  const getAnomaly = (fieldName: string) => {
+    return anomalies.find(a => a.field === fieldName);
   };
 
   const handleDelete = async () => {
@@ -254,6 +271,22 @@ export default function RecordDetailPage() {
         </Card>
       )}
 
+      {anomalies.length > 0 && (
+        <Card className="mb-6 border-amber-500/30 bg-amber-500/10">
+          <CardContent className="p-4 flex items-start gap-3">
+            <AlertTriangle className="w-5 h-5 text-amber-500 shrink-0 mt-0.5" />
+            <div>
+              <h3 className="text-sm font-medium text-amber-500 mb-1">
+                Anomalies Detected ({anomalies.length})
+              </h3>
+              <p className="text-sm text-amber-500/90">
+                The auditor detected mathematical or logical conflicts in the extracted data. Please review the highlighted fields below.
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 h-[calc(100vh-140px)]">
         {/* Left side: Document Viewer */}
         <Card className="h-full overflow-hidden flex flex-col bg-zinc-950/50 border-zinc-800">
@@ -356,8 +389,12 @@ export default function RecordDetailPage() {
                     step="0.01"
                     value={formData.total_amount || ""}
                     onChange={(e) => setFormData({ ...formData, total_amount: e.target.value })}
-                    className="h-9"
+                    className={`h-9 ${getAnomaly('total_amount') ? 'border-amber-500 bg-amber-500/10 text-amber-500' : ''}`}
+                    title={getAnomaly('total_amount')?.message}
                   />
+                  {getAnomaly('total_amount') && (
+                    <p className="text-[10px] text-amber-500 mt-1">{getAnomaly('total_amount').message}</p>
+                  )}
                 </div>
                 <div className="space-y-1">
                   <label className="text-xs text-zinc-400">Currency</label>
@@ -398,7 +435,12 @@ export default function RecordDetailPage() {
                       type="date"
                       value={formData.due_date || ""}
                       onChange={(e) => setFormData({ ...formData, due_date: e.target.value })}
+                      className={getAnomaly('due_date') ? 'border-amber-500 bg-amber-500/10 text-amber-500' : ''}
+                      title={getAnomaly('due_date')?.message}
                     />
+                    {getAnomaly('due_date') && (
+                      <p className="text-[10px] text-amber-500 mt-1">{getAnomaly('due_date').message}</p>
+                    )}
                   </div>
                   <div className="space-y-1 col-span-2">
                     <label className="text-xs text-zinc-400">Customer Name</label>
