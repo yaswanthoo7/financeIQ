@@ -267,7 +267,7 @@ export default function RecordsPage() {
                         {record.category && (
                           <CategoryBadge category={record.category} />
                         )}
-                        <RecordTypeBadge type={record.record_type} showLabel={false} />
+                        <RecordTypeBadge type={record.record_type} showLabel={true} />
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap font-medium text-zinc-200">
