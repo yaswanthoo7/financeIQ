@@ -2,6 +2,7 @@ services:
   # Web Service: FastAPI Backend
   - type: web
     name: invoiceiq-backend
+    plan: free
     runtime: docker
     dockerfilePath: ./backend/Dockerfile
     dockerContext: ./backend
@@ -24,6 +25,7 @@ services:
   # Web Service: Next.js Frontend
   - type: web
     name: invoiceiq-frontend
+    plan: free
     runtime: node
     buildCommand: cd frontend && npm install && npm run build
     startCommand: cd frontend && npm run start
@@ -34,5 +36,6 @@ services:
 databases:
   # Managed PostgreSQL Database
   - name: invoiceiq-db
+    plan: free
     databaseName: invoiceiq
     user: invoiceiq
