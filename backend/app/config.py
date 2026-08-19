@@ -2,6 +2,7 @@
 FinanceIQ Backend Configuration
 """
 from pydantic_settings import BaseSettings
+from pydantic import field_validator
 from functools import lru_cache
 import os
 
@@ -22,6 +23,24 @@ class Settings(BaseSettings):
     # Database
     DATABASE_URL: str = "postgresql+asyncpg://invoiceiq:invoiceiq@localhost:5432/invoiceiq"
     DATABASE_URL_SYNC: str = "postgresql+psycopg2://invoiceiq:invoiceiq@localhost:5432/invoiceiq"
+    
+    @field_validator("DATABASE_URL", mode="after")
+    @classmethod
+    def fix_async_db_url(cls, v: str) -> str:
+        if v and v.startswith("postgres://"):
+            return v.replace("postgres://", "postgresql+asyncpg://", 1)
+        elif v and v.startswith("postgresql://") and not v.startswith("postgresql+asyncpg://"):
+            return v.replace("postgresql://", "postgresql+asyncpg://", 1)
+        return v
+
+    @field_validator("DATABASE_URL_SYNC", mode="after")
+    @classmethod
+    def fix_sync_db_url(cls, v: str) -> str:
+        if v and v.startswith("postgres://"):
+            return v.replace("postgres://", "postgresql+psycopg2://", 1)
+        elif v and v.startswith("postgresql://") and not v.startswith("postgresql+psycopg2://"):
+            return v.replace("postgresql://", "postgresql+psycopg2://", 1)
+        return v
     
     # Gemini
     GEMINI_API_KEY: str = ""
