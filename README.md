@@ -48,8 +48,8 @@ FinanceIQ is a full-stack web application that extracts structured data from var
 ### 2. Clone & Configure
 
 ```bash
-git clone https://github.com/YOUR_USERNAME/unstrut-invoice.git
-cd unstrut-invoice
+git clone https://github.com/yaswanthoo7/financeIQ.git
+cd financeIQ
 
 # Create environment file
 cp backend/.env.example backend/.env
@@ -103,7 +103,7 @@ npm run dev
 ## Project Structure
 
 ```
-unstrut-invoice/
+financeIQ/
 ├── frontend/              # Next.js 14 app
 │   ├── src/app/           # App Router pages
 │   ├── src/components/    # React components
@@ -113,7 +113,7 @@ unstrut-invoice/
 │   │   ├── models/        # SQLAlchemy models + Pydantic schemas
 │   │   ├── routers/       # API endpoints
 │   │   ├── services/      # Business logic
-│   │   │   └── extraction/  # Dual extraction pipeline
+│   │   │   └── extraction/  # LLM extraction & Auditor pipeline
 │   │   └── utils/         # Prompts, validation
 │   └── tests/             # Pytest test suite
 ├── docker-compose.yml     # Local development orchestration

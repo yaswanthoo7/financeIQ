@@ -51,29 +51,29 @@ We perform classification, extraction, and categorization in a **single Gemini A
 
 ## 3. Extraction Pipeline (LLM-Only)
 
-**Decision:** Rely entirely on LLM vision (Gemini 2.0 Flash) for extracting structured data from documents. If extraction confidence is low, we flag it for user review rather than attempting a secondary extraction method.
+**Decision:** Rely entirely on LLM vision (Gemini 3.5 Flash Lite) for extracting structured data from documents. If extraction confidence is low, we flag it for user review rather than attempting a secondary extraction method.
 
 **Alternatives considered:**
 - LLM-only (simpler, fewer dependencies)
 - Traditional OCR + rule-based parsing (no LLM cost, but brittle)
 - Cloud Document AI (AWS Textract / Google Document AI) — accurate but feels like "just calling an API"
 
-**Reasoning:** LLM vision is remarkably good at understanding document layouts directly from the image/PDF. While we initially considered a hybrid approach (using OCR/unstructured.io as a fallback for dense tables or low-quality scans), the added complexity of maintaining system-level dependencies (like poppler and tesseract) outweighed the benefits. Gemini 2.0 Flash is sophisticated enough to handle edge cases in most documents. By relying solely on the LLM, we simplify our backend infrastructure significantly. When the LLM struggles, human review is the most reliable fallback.
+**Reasoning:** LLM vision is remarkably good at understanding document layouts directly from the image/PDF. While we initially considered a hybrid approach (using OCR/unstructured.io as a fallback for dense tables or low-quality scans), the added complexity of maintaining system-level dependencies (like poppler and tesseract) outweighed the benefits. Gemini 3.5 Flash Lite is sophisticated enough to handle edge cases in most documents. By relying solely on the LLM, we simplify our backend infrastructure significantly. When the LLM struggles, human review is the most reliable fallback.
 
 **Tradeoff accepted:** Some very complex documents may require more manual correction if the LLM's confidence drops, since we no longer have an OCR fallback. We mitigate this by providing a highly ergonomic review UI for quick human correction.
 
 ---
 
-## 4. Gemini 2.0 Flash Over GPT-4o / Claude
+## 4. Gemini 3.5 Flash Lite Over GPT-4o / Claude
 
-**Decision:** Use Google Gemini 2.0 Flash as the LLM provider.
+**Decision:** Use Google Gemini 3.5 Flash Lite as the LLM provider.
 
 **Alternatives considered:**
 - GPT-4o / GPT-4o-mini (excellent structured output, needs paid API key)
 - Claude 3.5 Sonnet/Haiku (strong document understanding, needs paid API key)
 - Open-source LLM via Ollama (fully free, but requires GPU and complex deployment)
 
-**Reasoning:** Gemini 2.0 Flash offers: (1) a generous free tier (1500 requests/day), (2) native vision capabilities for processing document images, and (3) good structured output quality. Free tier access is critical for rapid iteration and cost-efficiency. The quality is comparable to GPT-4o-mini for structured extraction tasks.
+**Reasoning:** Gemini 3.5 Flash Lite offers: (1) a generous free tier (1500 requests/day), (2) native vision capabilities for processing document images, and (3) good structured output quality. Free tier access is critical for rapid iteration and cost-efficiency. The quality is comparable to GPT-4o-mini for structured extraction tasks.
 
 **Tradeoff accepted:** Gemini's structured output is slightly less deterministic than GPT-4o's JSON mode. We mitigate this with careful prompt engineering and JSON parsing with error handling.
 
