@@ -9,7 +9,7 @@ FinanceIQ is a full-stack web application that extracts structured data from var
 - **Multi-Document Support** — Handles Invoices, Receipts, Purchase Orders, and Expense Reports
 - **Automatic Categorization** — Auto-assigns categories with a dual-persona (Business vs Personal) design
 - **Smart Upload** — Drag-and-drop upload with real-time processing status
-- **Extraction Pipeline** — LLM vision (Gemini 2.0 Flash)
+- **Extraction Pipeline** — LLM vision (Gemini 3.5 Flash Lite)
 - **Financial Auditor Pipeline** — Deterministic cross-checks for LLM math and logical constraints
 - **Anomaly Resolution UI** — Cell-level precision in flagging AI mistakes
 - **Adaptive Review UI** — View original document alongside dynamically generated forms based on document type
@@ -23,8 +23,8 @@ FinanceIQ is a full-stack web application that extracts structured data from var
 |-------|-----------|
 | Frontend | Next.js 14, React, TypeScript, Tailwind CSS, shadcn/ui |
 | Backend | Python 3.12, FastAPI, SQLAlchemy (Async) |
-| LLM | Google Gemini 2.0 Flash |
-| Document Processing | Gemini 2.0 Flash Vision |
+| LLM | Google Gemini 3.5 Flash Lite |
+| Document Processing | Gemini 3.5 Flash Lite Vision |
 | Database | PostgreSQL 16 |
 | Deployment | Render (Docker) |
 
@@ -43,7 +43,7 @@ FinanceIQ is a full-stack web application that extracts structured data from var
 4. Select a Google Cloud project (or create one — it's free)
 5. Copy the generated API key
 
-> **Note:** The free tier includes 1,500 requests/day with Gemini 2.0 Flash, which is more than enough for testing.
+> **Note:** The free tier includes 1,500 requests/day with Gemini 3.5 Flash Lite, which is more than enough for testing.
 
 ### 2. Clone & Configure
 

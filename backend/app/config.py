@@ -25,7 +25,7 @@ class Settings(BaseSettings):
     
     # Gemini
     GEMINI_API_KEY: str = ""
-    GEMINI_MODEL: str = "gemini-2.5-flash-lite"
+    GEMINI_MODEL: str = "gemini-3.5-flash-lite"
     
     # File Upload
     UPLOAD_DIR: str = "./uploads"
