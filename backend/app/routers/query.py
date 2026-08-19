@@ -3,7 +3,7 @@ Natural language query endpoint.
 """
 import json
 from datetime import date
-from fastapi import APIRouter, Depends, HTTPException, Cookie
+from fastapi import APIRouter, Depends, HTTPException, Cookie, Header
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, func, desc
 from sqlalchemy.orm import selectinload
@@ -20,10 +20,11 @@ router = APIRouter(prefix="/api", tags=["query"])
 settings = get_settings()
 
 
-def get_session_id(session_id: str | None = Cookie(default=None)) -> str:
-    if not session_id:
+def get_session_id(session_id: str | None = Cookie(default=None), x_session_id: str | None = Header(default=None)) -> str:
+    sid = x_session_id or session_id
+    if not sid:
         raise HTTPException(status_code=400, detail="No session ID")
-    return session_id
+    return sid
 
 
 @router.post("/query", response_model=QueryResponse)

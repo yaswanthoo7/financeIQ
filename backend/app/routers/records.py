@@ -4,7 +4,7 @@ Financial records CRUD endpoints.
 import os
 from uuid import UUID
 from typing import Optional
-from fastapi import APIRouter, Depends, HTTPException, Query, Cookie
+from fastapi import APIRouter, Depends, HTTPException, Query, Cookie, Header
 from fastapi.responses import FileResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, func, desc
@@ -23,10 +23,11 @@ from app.models.schemas import (
 router = APIRouter(prefix="/api/records", tags=["records"])
 
 
-def get_session_id(session_id: str | None = Cookie(default=None)) -> str:
-    if not session_id:
+def get_session_id(session_id: str | None = Cookie(default=None), x_session_id: str | None = Header(default=None)) -> str:
+    sid = x_session_id or session_id
+    if not sid:
         raise HTTPException(status_code=400, detail="No session ID. Please upload a document first.")
-    return session_id
+    return sid
 
 
 @router.get("", response_model=PaginatedResponse)

@@ -5,7 +5,7 @@ import os
 import uuid
 import aiofiles
 from typing import List
-from fastapi import APIRouter, UploadFile, File, Depends, HTTPException, BackgroundTasks, Cookie, Response
+from fastapi import APIRouter, UploadFile, File, Depends, HTTPException, BackgroundTasks, Cookie, Response, Header
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.database import get_db
@@ -18,10 +18,11 @@ router = APIRouter(prefix="/api", tags=["upload"])
 settings = get_settings()
 
 
-def get_session_id(session_id: str | None = Cookie(default=None)) -> str:
+def get_session_id(session_id: str | None = Cookie(default=None), x_session_id: str | None = Header(default=None)) -> str:
     """Get or generate a session ID for user isolation."""
-    if session_id:
-        return session_id
+    sid = x_session_id or session_id
+    if sid:
+        return sid
     return str(uuid.uuid4())
 
 

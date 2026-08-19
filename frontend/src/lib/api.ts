@@ -225,6 +225,7 @@ async function apiFetch<T>(
     ...options,
     headers: {
       "Content-Type": "application/json",
+      "x-session-id": sessionId,
       ...options.headers,
     },
     credentials: "include",
@@ -252,10 +253,13 @@ export const api = {
     const formData = new FormData();
     files.forEach((file) => formData.append("files", file));
 
+    const sessionId = getSessionId();
     const res = await fetch(`${API_BASE}/api/upload`, {
       method: "POST",
       body: formData,
-      headers: {},
+      headers: {
+        "x-session-id": sessionId,
+      },
       credentials: "include",
     });
 
