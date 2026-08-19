@@ -99,6 +99,7 @@ export interface FinancialRecord {
   receipt_detail: ReceiptDetail | null;
   purchase_order_detail: PurchaseOrderDetail | null;
   expense_report_detail: ExpenseReportDetail | null;
+  anomalies?: any;
 }
 
 export interface RecordListItem {
