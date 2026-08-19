@@ -23,8 +23,12 @@ from app.models.schemas import (
 router = APIRouter(prefix="/api/records", tags=["records"])
 
 
-def get_session_id(session_id: str | None = Cookie(default=None), x_session_id: str | None = Header(default=None)) -> str:
-    sid = x_session_id or session_id
+def get_session_id(
+    session_id: str | None = Cookie(default=None),
+    x_session_id: str | None = Header(default=None),
+    session_id_query: str | None = Query(default=None, alias="session_id")
+) -> str:
+    sid = session_id_query or x_session_id or session_id
     if not sid:
         raise HTTPException(status_code=400, detail="No session ID. Please upload a document first.")
     return sid

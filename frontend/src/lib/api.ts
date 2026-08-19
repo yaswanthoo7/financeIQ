@@ -318,7 +318,8 @@ export const api = {
 
   /** Get the URL for the original document file */
   getFileUrl(id: string): string {
-    return `${API_BASE}/api/records/${id}/file`;
+    const sessionId = getSessionId();
+    return `${API_BASE}/api/records/${id}/file?session_id=${sessionId}`;
   },
 
   /** List categories */
