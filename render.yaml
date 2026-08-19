@@ -19,7 +19,7 @@ services:
       - key: GEMINI_API_KEY
         sync: false
       - key: CORS_ORIGINS
-        value: https://invoiceiq-frontend.onrender.com,http://localhost:3000
+        sync: false
 
   # Web Service: Next.js Frontend
   - type: web
@@ -29,10 +29,7 @@ services:
     startCommand: cd frontend && npm run start
     envVars:
       - key: NEXT_PUBLIC_API_URL
-        fromService:
-          type: web
-          name: invoiceiq-backend
-          property: url
+        sync: false
 
 databases:
   # Managed PostgreSQL Database
