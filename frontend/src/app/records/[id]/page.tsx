@@ -196,20 +196,19 @@ export default function RecordDetailPage() {
 
   return (
     <AppShell>
-      {/* Header */}
-      <div className="flex items-center justify-between mb-6">
-        <div className="flex items-center gap-4">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
+        <div className="flex items-start md:items-center gap-4">
           <Button
             variant="ghost"
             size="icon"
             onClick={() => router.push("/records")}
-            className="rounded-full bg-zinc-900"
+            className="rounded-full bg-zinc-900 shrink-0 mt-1 md:mt-0"
           >
             <ArrowLeft className="w-4 h-4" />
           </Button>
-          <div>
-            <div className="flex items-center gap-3">
-              <h1 className="text-2xl font-bold text-zinc-100">
+          <div className="min-w-0">
+            <div className="flex flex-wrap items-center gap-2 md:gap-3">
+              <h1 className="text-xl md:text-2xl font-bold text-zinc-100 truncate break-all">
                 {record.original_filename}
               </h1>
               <Badge
@@ -224,9 +223,9 @@ export default function RecordDetailPage() {
                 {record.status}
               </Badge>
             </div>
-            <div className="flex items-center gap-2 text-sm text-zinc-400 mt-1">
+            <div className="flex flex-wrap items-center gap-2 text-xs md:text-sm text-zinc-400 mt-1.5">
               <span>{record.extraction_method === "hybrid" ? "Hybrid AI" : "Gemini Vision"}</span>
-              <span>•</span>
+              <span className="hidden md:inline">•</span>
               <span className="flex items-center gap-1">
                 Confidence: 
                 <span className={getConfidenceColor(record.confidence_score)}>
@@ -237,16 +236,16 @@ export default function RecordDetailPage() {
           </div>
         </div>
         
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2 md:gap-3 w-full md:w-auto">
           <Button
             variant="destructive"
             onClick={handleDelete}
-            className="bg-red-500/10 text-red-400 hover:bg-red-500/20 hover:text-red-300"
+            className="flex-1 md:flex-none bg-red-500/10 text-red-400 hover:bg-red-500/20 hover:text-red-300"
           >
             <Trash2 className="w-4 h-4 mr-2" />
             Delete
           </Button>
-          <Button onClick={handleSave} disabled={saving} className="bg-violet-600 hover:bg-violet-700">
+          <Button onClick={handleSave} disabled={saving} className="flex-[2] md:flex-none bg-violet-600 hover:bg-violet-700">
             {saving ? (
               <Loader2 className="w-4 h-4 mr-2 animate-spin" />
             ) : (
@@ -287,9 +286,9 @@ export default function RecordDetailPage() {
         </Card>
       )}
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 h-[calc(100vh-140px)]">
+      <div className="flex flex-col lg:grid lg:grid-cols-2 gap-6 lg:h-[calc(100vh-140px)]">
         {/* Left side: Document Viewer */}
-        <Card className="h-full overflow-hidden flex flex-col bg-zinc-950/50 border-zinc-800">
+        <Card className="h-[400px] lg:h-full overflow-hidden flex flex-col bg-zinc-950/50 border-zinc-800 shrink-0">
           <div className="p-3 border-b border-zinc-800 bg-zinc-900/50 flex items-center justify-between">
             <h3 className="text-sm font-medium text-zinc-300 flex items-center gap-2">
               <FileText className="w-4 h-4" />

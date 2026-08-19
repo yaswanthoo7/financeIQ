@@ -55,10 +55,10 @@ export default function DashboardPage() {
       setLoading(true);
       const [analyticsData, recordsData] = await Promise.all([
         api.getAnalytics(),
-        api.listRecords({ page_size: 5, sort_by: "created_at", sort_order: "desc" }),
+        api.listRecords({ page_size: 10, sort_by: "created_at", sort_order: "desc" }),
       ]);
       setAnalytics(analyticsData);
-      setRecentRecords(recordsData.items);
+      setRecentRecords(recordsData.items.filter(r => r.status !== "failed").slice(0, 5));
     } catch (err: any) {
       setError(err.message);
     } finally {
