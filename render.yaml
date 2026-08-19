@@ -24,7 +24,7 @@ services:
 
   # Web Service: Next.js Frontend
   - type: web
-    name: invoiceiq-frontend
+    name: financeiq
     plan: free
     runtime: node
     buildCommand: cd frontend && npm install && npm run build
